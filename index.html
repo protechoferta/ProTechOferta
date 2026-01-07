@@ -1,110 +1,87 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <title>ProTechOferta – AI oferty dla firm technicznych</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="AI generator profesjonalnych ofert dla firm technicznych."/>
-  <style>
-    body {font-family: Arial, sans-serif; margin:0; background:#f5f7fa; color:#111;}
-    header {background:#0f172a; color:#fff; padding:60px 20px; text-align:center;}
-    h1 {font-size:2.3rem;}
-    section {padding:40px 20px; max-width:900px; margin:auto;}
-    form {display:grid; gap:10px;}
-    input, textarea, select, button {padding:10px; font-size:1rem;}
-    button {background:#2563eb; color:#fff; border:none; cursor:pointer;}
-    .result {background:#fff; padding:20px; margin-top:20px;}
-  </style>
+<meta charset="UTF-8">
+<title>ProTechOferta AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f5f7fa;color:#111;}
+header{background:#0f172a;color:#fff;padding:60px 20px;text-align:center;}
+h1{font-size:2.3rem;}
+section{padding:40px 20px;max-width:900px;margin:auto;}
+form{display:grid;gap:10px;}
+input,textarea,select,button{padding:10px;font-size:1rem;}
+button{background:#2563eb;color:#fff;border:none;cursor:pointer;}
+.result{background:#fff;padding:20px;margin-top:20px;}
+</style>
 </head>
 <body>
 
 <header>
-  <h1>Profesjonalna oferta w 2 minuty</h1>
-  <p>AI dla firm technicznych: elektryka • fotowoltaika • HVAC</p>
+<h1>Profesjonalna oferta w 2 minuty</h1>
+<p>AI dla firm technicznych: elektryka • fotowoltaika • HVAC</p>
 </header>
 
 <section>
-  <h2>Generator oferty</h2>
-  <form id="offerForm">
-    <select id="industry">
-      <option>Elektryka</option>
-      <option>Fotowoltaika</option>
-      <option>HVAC / Klimatyzacja</option>
-    </select>
-    <select id="client">
-      <option>Osoba prywatna</option>
-      <option>Firma</option>
-    </select>
-    <textarea id="scope" placeholder="Zakres prac" required></textarea>
-    <input id="price" placeholder="Cena" required />
-    <input id="deadline" placeholder="Termin realizacji" required />
-    <textarea id="company" placeholder="Dane firmy" required></textarea>
-    <button type="submit">Generuj ofertę</button>
-  </form>
+<h2>Generator oferty</h2>
+<form id="offerForm">
+<select id="industry">
+<option>Elektryka</option>
+<option>Fotowoltaika</option>
+<option>HVAC / Klimatyzacja</option>
+</select>
+<select id="client">
+<option>Osoba prywatna</option>
+<option>Firma</option>
+</select>
+<textarea id="scope" placeholder="Zakres prac" required></textarea>
+<input id="price" placeholder="Cena" required />
+<input id="deadline" placeholder="Termin realizacji" required />
+<textarea id="company" placeholder="Dane firmy" required></textarea>
+<button type="submit">Generuj ofertę</button>
+</form>
 
-  <div id="output" class="result"></div>
+<div id="output" class="result"></div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-const form = document.getElementById("offerForm");
-const output = document.getElementById("output");
+const form=document.getElementById("offerForm");
+const output=document.getElementById("output");
+let freeLimit=3;
 
-// Licznik darmowych ofert (2 na dzień)
-let freeLimit = 2;
+form.addEventListener("submit", async(e)=>{
+e.preventDefault();
+if(freeLimit<=0){output.innerText="Limit darmowych ofert wyczerpany."; return;}
+const industry=document.getElementById("industry").value;
+const client=document.getElementById("client").value;
+const scope=document.getElementById("scope").value;
+const price=document.getElementById("price").value;
+const deadline=document.getElementById("deadline").value;
+const company=document.getElementById("company").value;
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+output.innerText="Generuję ofertę... AI pracuje 🖥️";
 
-  if(freeLimit <= 0){
-    output.innerText = "Limit darmowych ofert wyczerpany. Skorzystaj z płatnej wersji.";
-    return;
-  }
+try{
+const response=await fetch("/.netlify/functions/generateOffer",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({industry,client,scope,price,deadline,company})
+});
+const data=await response.json();
+const aiText=data.text;
+output.innerText=aiText;
 
-  const industry = document.getElementById("industry").value;
-  const client = document.getElementById("client").value;
-  const scope = document.getElementById("scope").value;
-  const price = document.getElementById("price").value;
-  const deadline = document.getElementById("deadline").value;
-  const company = document.getElementById("company").value;
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
+doc.setFontSize(12);
+doc.text(aiText,10,10);
+doc.save("Oferta.pdf");
 
-  output.innerText = "Generuję ofertę... AI pracuje 🖥️";
-
-  // Wywołanie OpenAI API z Twoim kluczem
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + process.env.OPENAI_API_KEY
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
-          {role: "system", content: "Jesteś profesjonalnym twórcą ofert handlowych dla firm technicznych."},
-          {role: "user", content: `Przygotuj ofertę dla branży: ${industry}, klient: ${client}, zakres: ${scope}, cena: ${price}, termin: ${deadline}, firma: ${company}. Zrób profesjonalny, gotowy dokument.`}
-        ]
-      })
-    });
-
-    const data = await response.json();
-    const aiText = data.choices[0].message.content;
-
-    output.innerText = aiText;
-
-    // Tworzenie PDF
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(12);
-    doc.text(aiText, 10, 10);
-    doc.save("Oferta.pdf");
-
-    // Zmniejszamy licznik darmowych ofert
-    freeLimit--;
-
-  } catch(err){
-    output.innerText = "Błąd AI: " + err.message;
-  }
+freeLimit--;
+}catch(err){
+output.innerText="Błąd AI: "+err.message;
+}
 });
 </script>
 
