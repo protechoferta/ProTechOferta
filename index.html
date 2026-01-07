@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>ProTechOferta – AI oferty dla firm technicznych</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="AI generator profesjonalnych ofert dla firm technicznych."/>
+  <style>
+    body {font-family: Arial, sans-serif; margin:0; background:#f5f7fa; color:#111;}
+    header {background:#0f172a; color:#fff; padding:60px 20px; text-align:center;}
+    h1 {font-size:2.3rem;}
+    section {padding:40px 20px; max-width:900px; margin:auto;}
+    form {display:grid; gap:10px;}
+    input, textarea, select, button {padding:10px; font-size:1rem;}
+    button {background:#2563eb; color:#fff; border:none; cursor:pointer;}
+    .result {background:#fff; padding:20px; margin-top:20px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Profesjonalna oferta w 2 minuty</h1>
+  <p>AI dla firm technicznych: elektryka • fotowoltaika • HVAC</p>
+</header>
+
+<section>
+  <h2>Generator oferty</h2>
+  <form id="offerForm">
+    <select id="industry">
+      <option>Elektryka</option>
+      <option>Fotowoltaika</option>
+      <option>HVAC / Klimatyzacja</option>
+    </select>
+    <select id="client">
+      <option>Osoba prywatna</option>
+      <option>Firma</option>
+    </select>
+    <textarea id="scope" placeholder="Zakres prac" required></textarea>
+    <input id="price" placeholder="Cena" required />
+    <input id="deadline" placeholder="Termin realizacji" required />
+    <textarea id="company" placeholder="Dane firmy" required></textarea>
+    <button type="submit">Generuj ofertę</button>
+  </form>
+
+  <div id="output" class="result"></div>
+</section>
+
+<script>
+document.getElementById("offerForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const text = `OFERTA HANDLOWA
+
+Zakres prac:
+${scope.value}
+
+Cena:
+${price.value}
+
+Termin:
+${deadline.value}
+
+Dane firmy:
+${company.value}
+
+Dziękujemy za zainteresowanie ofertą.`;
+  document.getElementById("output").innerText = text;
+});
+</script>
+
+</body>
+</html>
